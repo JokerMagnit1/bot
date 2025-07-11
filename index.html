@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Админ-панель</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    .message { border: 1px solid #ccc; margin-bottom: 10px; padding: 10px; }
+    .reply-box { margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h2>💬 Сообщения от пользователей</h2>
+  <div id="messages"></div>
+
+  <script>
+    async function loadMessages() {
+      const res = await fetch("/messages");
+      const data = await res.json();
+
+      const container = document.getElementById("messages");
+      container.innerHTML = "";
+
+      data.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.innerHTML = `<strong>${msg.user}</strong>: ${msg.text}
+          <div class="reply-box">
+            <input type="text" placeholder="Ответить..." />
+            <button onclick="sendReply('${msg.chat_id}', this.previousElementSibling.value)">Отправить</button>
+          </div>`;
+        container.appendChild(div);
+      });
+    }
+
+    async function sendReply(chat_id, text) {
+      await fetch("/reply", {
+        method: "POST",
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id, text })
+      });
+      alert("✅ Ответ отправлен");
+    }
+
+    loadMessages();
+    setInterval(loadMessages, 5000);  // обновление каждые 5 секунд
+  </script>
+</body>
+</html>
