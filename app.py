@@ -3,16 +3,17 @@ from telegram import Bot
 import os
 
 app = Flask(__name__)
-bot = Bot(token=os.getenv("BOT_TOKEN"))  # Получаем токен из переменных окружения
+bot = Bot(token=os.getenv("BOT_TOKEN"))  # Получаем токен из переменной окружения
 
-# Хранилище сообщений (можно заменить на базу или Google Sheets)
+# Простое хранилище сообщений
 messages = []
 
+# Главная страница
 @app.route("/")
 def index():
-    return "🚀 Бот работает!"
+    return "✅ Бот запущен на Render!"
 
-# Webhook от Telegram
+# Обработка Webhook от Telegram
 @app.route("/webhook", methods=["POST"])
 def telegram_webhook():
     data = request.json
@@ -20,6 +21,8 @@ def telegram_webhook():
     chat_id = msg.get("chat", {}).get("id")
     user_name = msg.get("from", {}).get("first_name")
     text = msg.get("text")
+
+    print("📩 Пришло сообщение:", data)  # Лог для отладки
 
     if chat_id and text:
         messages.append({
@@ -31,12 +34,12 @@ def telegram_webhook():
 
     return "ok"
 
-# Получение списка сообщений (для веб-интерфейса)
+# Эндпоинт для веб-интерфейса — получить все сообщения
 @app.route("/messages", methods=["GET"])
 def get_messages():
     return messages
 
-# Ответ пользователю
+# Эндпоинт для отправки ответа пользователю
 @app.route("/reply", methods=["POST"])
 def reply():
     data = request.json
@@ -46,9 +49,9 @@ def reply():
     if chat_id and text:
         bot.send_message(chat_id=chat_id, text=text)
         return {"status": "✅ Ответ отправлен"}
-    return {"status": "⚠️ Ошибка: отсутствуют данные"}, 400
+    return {"status": "⚠️ Ошибка: отсутствует chat_id или text"}, 400
 
-# Запуск Flask — важно для Render!
+# Правильный запуск Flask на Render
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))  # Render подаёт порт через переменную окружения
-    app.run(host="0.0.0.0", port=port)
+    port = int(os.environ.get("PORT", 5000))  # Получаем порт от Render
+    app.run(host="0.0.0.0", port=port)        # Слушаем внешний мир!
